@@ -1,0 +1,58 @@
+.backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: 20;
+  background-color: rgba(0, 0, 0, 0.75);
+}
+.close {
+  position: absolute;
+  right: 0;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 0 0.86rem;
+  cursor: pointer;
+  color:rgba(0, 0, 0, 0.75);
+  font-size: 2rem;
+}
+
+.close:hover {
+  background-color: rgba(10, 33, 42, 0.671);
+  color: white;
+}
+.modal {
+  position: fixed;
+  top: 20vh;
+  left: 25%;
+  background-color: rgb(226, 250, 253);
+  padding: 1rem;
+  border-radius: 14px;
+  z-index: 30;
+}
+
+@media (min-width: 768px) {
+  .modal {
+    width: 20rem;
+    left: calc(50% - 10rem);
+  }
+}
+
+@media (max-width: 768px) {
+  .modal {
+    width: 20rem;
+    left: calc(50% - 10rem)
+  }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(3rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
