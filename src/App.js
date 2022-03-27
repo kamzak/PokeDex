@@ -23,6 +23,7 @@ function App() {
   const [filter, setFilter] = useState("bug");
   const [bg, setBg] = useState(false);
   const [errorModal, setErrorModal] = useState(false);
+  const [disableFilter, setDisableFilter] = useState(false);
 
   const searchRef = useRef();
 
@@ -38,6 +39,7 @@ function App() {
 
   async function fetchPokemonsHandler() {
     setIsLoading(true);
+    setDisableFilter(true);
     const response = await fetch(responseUrl);
     const data = await response.json();
 
@@ -78,15 +80,19 @@ function App() {
 
       if (i === transformedPokemons.length - 1) {
         setIsLoading(false);
+        setDisableFilter(false);
       }
     }
     if (allData.length !== 0) {
       setIsLoading(false);
+      setDisableFilter(false);
     }
   }
 
   const loadMoreHandler = () => {
     setIsLoading(true);
+    setDisableFilter(true);
+    
     setTimeout(() => {
       setResponseUrl(
         `https://pokeapi.co/api/v2/pokemon?limit=${limit}&offset=${offset}`
@@ -255,7 +261,7 @@ function App() {
           </select>
           <button
             className={`${classes.searchButton} ${buttonClasses}`}
-            onClick={filterPokemon}
+            onClick={filterPokemon} disabled={disableFilter}
           >
             Filter
           </button>
