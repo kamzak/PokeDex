@@ -49,7 +49,7 @@ function App() {
       };
     });
 
-    for (let i = 0; i <= transformedPokemons.length; i++) {
+    for (let i = 0; i < transformedPokemons.length; i++) {
       const responseTypes = await fetch(
         `https://pokeapi.co/api/v2/pokemon/${transformedPokemons[i].name}`
       );

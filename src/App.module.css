@@ -294,7 +294,7 @@ div.paramsModal {
   color: rgb(251, 233, 233);
   text-align: center;
   width: 30rem !important;
-  left: calc(50% - 15rem);
+  left: calc(50% - 15rem) !important;
   border: 2px solid rgba(230, 0, 0, 0.548);
 }
 .errorModal span:first-child {
