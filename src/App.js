@@ -107,7 +107,7 @@ function App() {
   async function fetchAllPokemonsHandler() {
     setIsLoading(true);
     setDisableAllFilter(true);
-    const response = await fetch('https://pokeapi.co/api/v2/pokemon?limit=400');
+    const response = await fetch("https://pokeapi.co/api/v2/pokemon?limit=400");
     const data = await response.json();
 
     const transformedPokemons = data.results.map((pokes) => {
@@ -115,6 +115,7 @@ function App() {
         name: pokes.name,
       };
     });
+    var firstArray = [];
 
     for (let i = 0; i < transformedPokemons.length; i++) {
       const responseTypes = await fetch(
@@ -144,23 +145,21 @@ function App() {
         }
       });
 
-      setAllPokemons((prevState) => [
-        ...prevState,
-        {
-          name: transformedPokemons[i].name,
-          types: [...data.types, typeDefault],
-          sprite: data.sprites.front_default,
-          height: data.height,
-          weight: data.weight,
-          description: desc,
-        },
-      ]);
+      firstArray.push({
+        name: transformedPokemons[i].name,
+        types: [...data.types, typeDefault],
+        sprite: data.sprites.front_default,
+        height: data.height,
+        weight: data.weight,
+        description: desc,
+      });
 
       if (i === transformedPokemons.length - 1) {
         setIsLoading(false);
         setDisableAllFilter(false);
       }
     }
+    setAllPokemons(firstArray);
     if (allPokemons.length !== 0) {
       setIsLoading(false);
       setDisableAllFilter(false);
@@ -172,13 +171,13 @@ function App() {
     setDisableFilter(true);
     setDisableAllFilter(true);
     setFilterAll(false);
+    console.log(allData);
+    console.log(allPokemons);
 
-    setTimeout(() => {
-      setResponseUrl(
-        `https://pokeapi.co/api/v2/pokemon?limit=${limit}&offset=${offset}`
-      );
-      setOffset((prevState) => prevState + 20);
-    }, 500);
+    setResponseUrl(
+      `https://pokeapi.co/api/v2/pokemon?limit=${limit}&offset=${offset}`
+    );
+    setOffset((prevState) => prevState + 20);
   };
 
   const showModal = () => {
@@ -194,6 +193,7 @@ function App() {
   };
   const searchPokemon = async (e) => {
     e.preventDefault();
+    setFilterAll(false);
     try {
       const searchPhrase = searchRef.current.value;
       const response = await fetch(
@@ -265,12 +265,11 @@ function App() {
     setShowAllPokemons([]);
     setAllData([]);
     setFilterAll(true);
-    const tempArray = allPokemons;
 
-    tempArray.forEach((e, i) => {
+    allPokemons.forEach((e, i) => {
       if (
-        tempArray[i].types[0].type.name === filter.toLowerCase() ||
-        tempArray[i].types[1].type.name === filter.toLowerCase()
+        allPokemons[i].types[0].type.name === filter.toLowerCase() ||
+        allPokemons[i].types[1].type.name === filter.toLowerCase()
       ) {
         setShowAllPokemons((prevState) => [
           ...prevState,
@@ -379,80 +378,92 @@ function App() {
             onClick={filterAllPokemons}
             disabled={disableAllFilter}
           >
-            Filter all
+            {disableAllFilter && (<div>
+              <div className={classes["lds-ring"]}>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+              </div>
+              Filter all
+              </div>
+            )}
+            {!disableAllFilter && <span>Filter all</span>}
           </button>
         </div>
         <ul className={classes.pokedex}>
-          {allData.map((el, i) => {
-            return (
-              <li
-                className={`${cardClasses} animate__animated animate__backInUp`}
-                key={i}
-              >
-                <div
+          {!filterAll &&
+            allData.map((el, i) => {
+              return (
+                <li
+                  className={`${cardClasses} animate__animated animate__backInUp`}
                   key={i}
-                  onClick={() => {
-                    showModal();
-                    modalIndexHandler(i);
-                  }}
                 >
-                  <img key={i} src={el.sprite} alt="" />
-                </div>
-                <p className={classes.name}>{el.name}</p>
-                <div className={classes.types}>
-                  {el.types.map((typy, j) => {
-                    return (
-                      <span
-                        className={classes.type}
-                        style={{
-                          backgroundColor: typeColors[typy.type.name],
-                          color: typeTextColors[typy.type.name],
-                        }}
-                        key={j}
-                      >
-                        {typy.type.name}
-                      </span>
-                    );
-                  })}
-                </div>
-              </li>
-            );
-          })}
-          {filterAll && showAllPokemons.map((el, i) => {
-            return (
-              <li
-                className={`${cardClasses} animate__animated animate__backInUp`}
-                key={i}
-              >
-                <div
+                  <div
+                    key={i}
+                    onClick={() => {
+                      showModal();
+                      modalIndexHandler(i);
+                    }}
+                  >
+                    <img key={i} src={el.sprite} alt="" />
+                  </div>
+                  <p className={classes.name}>{el.name}</p>
+                  <div className={classes.types}>
+                    {el.types.map((typy, j) => {
+                      return (
+                        <span
+                          className={classes.type}
+                          style={{
+                            backgroundColor: typeColors[typy.type.name],
+                            color: typeTextColors[typy.type.name],
+                          }}
+                          key={j}
+                        >
+                          {typy.type.name}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </li>
+              );
+            })}
+          {filterAll &&
+            showAllPokemons.map((el, i) => {
+              return (
+                <li
+                  className={`${cardClasses} animate__animated animate__backInUp`}
                   key={i}
-                  onClick={() => {
-                    showModal();
-                    modalIndexHandler(i);
-                  }}
                 >
-                  <img key={i} src={el.sprite} alt="" />
-                </div>
-                <p className={classes.name}>{el.name}</p>
-                <div className={classes.types}>
-                  {el.types.map((typy, j) => {
-                    return (
-                      <span
-                        className={classes.type}
-                        style={{
-                          backgroundColor: typeColors[typy.type.name],
-                          color: typeTextColors[typy.type.name],
-                        }}
-                        key={j}
-                      >
-                        {typy.type.name}
-                      </span>
-                    );
-                  })}
-                </div>
-              </li>
-            );
-          })}
+                  <div
+                    key={i}
+                    onClick={() => {
+                      showModal();
+                      modalIndexHandler(i);
+                    }}
+                  >
+                    <img key={i} src={el.sprite} alt="" />
+                  </div>
+                  <p className={classes.name}>{el.name}</p>
+                  <div className={classes.types}>
+                    {el.types.map((typy, j) => {
+                      return (
+                        <span
+                          className={classes.type}
+                          style={{
+                            backgroundColor: typeColors[typy.type.name],
+                            color: typeTextColors[typy.type.name],
+                          }}
+                          key={j}
+                        >
+                          {typy.type.name}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </li>
+              );
+            })}
         </ul>
         {show && !filterAll && (
           <Modal
@@ -499,7 +510,9 @@ function App() {
         )}
         {show && filterAll && (
           <Modal
-            typeColor={typeColors[showAllPokemons[modalIndex].types[0].type.name]}
+            typeColor={
+              typeColors[showAllPokemons[modalIndex].types[0].type.name]
+            }
             onClose={showModal}
           >
             <img
@@ -507,7 +520,9 @@ function App() {
               src={showAllPokemons[modalIndex].sprite}
               alt=""
             />
-            <p className={classes.nameModal}>{showAllPokemons[modalIndex].name}</p>
+            <p className={classes.nameModal}>
+              {showAllPokemons[modalIndex].name}
+            </p>
             <div className={classes.typesModal}>
               {showAllPokemons[modalIndex].types.map((typy, j) => {
                 return (
@@ -550,7 +565,10 @@ function App() {
             ></div>
           </div>
         )}
-        {allData.length === 0 && showAllPokemons.length === 0 && !isLoading && (
+        {showAllPokemons.length === 0 && !isLoading && filterAll && (
+          <p className={classes.notFound}>Pokemon not found...</p>
+        )}
+        {allData.length === 0 && !isLoading && !filterAll && (
           <p className={classes.notFound}>Pokemon not found...</p>
         )}
         <button
