@@ -264,6 +264,7 @@ div.paramsModal {
   cursor: pointer;
 }
 .typesButtons {
+  color: rgb(63, 63, 63);
   padding: 0.5rem 0.5rem 0.5rem 1rem;
   background-color: #41a9ee4d;
   display: inline-block;
@@ -534,11 +535,13 @@ div.paramsModal {
     display: flex;
   }
   .typesButtons button {
+    color: white;
+    opacity: 1;
     width: 100%;
     margin: 0 0 0 0.25rem;
   }
   .typesButtons label {
-    margin: 0 auto 0 0.25rem;
+    color: white;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -549,6 +552,7 @@ div.paramsModal {
 
   .pokedex li {
     width: 100%;
+    background-color: rgba(228, 248, 253, 0.87);
     margin: 0.25rem auto;
   }
 
@@ -561,6 +565,7 @@ div.paramsModal {
   }
   .loadMore {
     width: 100%;
+    color: white;
   }
   .container {
     background-color: transparent;
