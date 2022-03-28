@@ -5,10 +5,16 @@ import Modal from "./components/UI/Modal";
 import logo from "./static/logo.png";
 import searchIcon from "./static/search.png";
 import lightIcon from "./static/light.png";
-import errorIcon from './static/error-icon.png';
+import errorIcon from "./static/error-icon.png";
 import { typeColors, typeTextColors } from "./helpers/typesColors";
 
 const limit = 20;
+
+const typeDefault = {
+  type: {
+    name: 1,
+  },
+};
 
 function App() {
   const [allData, setAllData] = useState([]);
@@ -24,17 +30,15 @@ function App() {
   const [bg, setBg] = useState(false);
   const [errorModal, setErrorModal] = useState(false);
   const [disableFilter, setDisableFilter] = useState(false);
+  const [disableAllFilter, setDisableAllFilter] = useState(false);
+  const [allPokemons, setAllPokemons] = useState([]);
+  const [showAllPokemons, setShowAllPokemons] = useState([]);
+  const [filterAll, setFilterAll] = useState(false);
 
   const searchRef = useRef();
 
   const onTypeChange = (e) => {
     setFilter(e.target.value);
-  };
-
-  const typeDefault = {
-    type: {
-      name: 1,
-    },
   };
 
   async function fetchPokemonsHandler() {
@@ -55,8 +59,19 @@ function App() {
       );
       const data = await responseTypes.json();
 
+      let tempName = "";
+      // Problem in API
+      if (transformedPokemons[i].name === "deoxys-normal") {
+        tempName = "deoxys";
+      } else if (transformedPokemons[i].name === "wormadam-plant") {
+        tempName = "wormadam";
+      } else if (transformedPokemons[i].name === "giratina-altered") {
+        tempName = "giratina";
+      } else {
+        tempName = transformedPokemons[i].name;
+      }
       const responseSpecies = await fetch(
-        `https://pokeapi.co/api/v2/pokemon-species/${transformedPokemons[i].name}`
+        `https://pokeapi.co/api/v2/pokemon-species/${tempName}`
       );
       const species = await responseSpecies.json();
       let desc = "";
@@ -89,10 +104,75 @@ function App() {
     }
   }
 
+  async function fetchAllPokemonsHandler() {
+    setIsLoading(true);
+    setDisableAllFilter(true);
+    const response = await fetch('https://pokeapi.co/api/v2/pokemon?limit=400');
+    const data = await response.json();
+
+    const transformedPokemons = data.results.map((pokes) => {
+      return {
+        name: pokes.name,
+      };
+    });
+
+    for (let i = 0; i < transformedPokemons.length; i++) {
+      const responseTypes = await fetch(
+        `https://pokeapi.co/api/v2/pokemon/${transformedPokemons[i].name}`
+      );
+      const data = await responseTypes.json();
+
+      let tempName = "";
+      // Problem in API
+      if (transformedPokemons[i].name === "deoxys-normal") {
+        tempName = "deoxys";
+      } else if (transformedPokemons[i].name === "wormadam-plant") {
+        tempName = "wormadam";
+      } else if (transformedPokemons[i].name === "giratina-altered") {
+        tempName = "giratina";
+      } else {
+        tempName = transformedPokemons[i].name;
+      }
+      const responseSpecies = await fetch(
+        `https://pokeapi.co/api/v2/pokemon-species/${tempName}`
+      );
+      const species = await responseSpecies.json();
+      let desc = "";
+      species.flavor_text_entries.some((flavor) => {
+        if (flavor.language.name === "en") {
+          desc = flavor.flavor_text;
+        }
+      });
+
+      setAllPokemons((prevState) => [
+        ...prevState,
+        {
+          name: transformedPokemons[i].name,
+          types: [...data.types, typeDefault],
+          sprite: data.sprites.front_default,
+          height: data.height,
+          weight: data.weight,
+          description: desc,
+        },
+      ]);
+
+      if (i === transformedPokemons.length - 1) {
+        setIsLoading(false);
+        setDisableAllFilter(false);
+      }
+    }
+    if (allPokemons.length !== 0) {
+      setIsLoading(false);
+      setDisableAllFilter(false);
+    }
+  }
+
   const loadMoreHandler = () => {
     setIsLoading(true);
     setDisableFilter(true);
-    
+    setDisableAllFilter(true);
+    setFilterAll(false);
+
     setTimeout(() => {
       setResponseUrl(
         `https://pokeapi.co/api/v2/pokemon?limit=${limit}&offset=${offset}`
@@ -179,6 +259,33 @@ function App() {
       }
     });
   };
+
+  const filterAllPokemons = async (e) => {
+    e.preventDefault();
+    setShowAllPokemons([]);
+    setAllData([]);
+    setFilterAll(true);
+    const tempArray = allPokemons;
+
+    tempArray.forEach((e, i) => {
+      if (
+        tempArray[i].types[0].type.name === filter.toLowerCase() ||
+        tempArray[i].types[1].type.name === filter.toLowerCase()
+      ) {
+        setShowAllPokemons((prevState) => [
+          ...prevState,
+          {
+            name: e.name,
+            types: [...e.types],
+            sprite: e.sprite,
+            height: e.height,
+            weight: e.weight,
+            description: e.description,
+          },
+        ]);
+      }
+    });
+  };
   const bgClasses = bg ? "" : classes.dark;
   const navClasses = bg ? "" : classes.darkNav;
   const contClasses = bg ? "" : classes.darkCont;
@@ -191,6 +298,7 @@ function App() {
   };
 
   useEffect(() => {
+    fetchAllPokemonsHandler();
     fetchPokemonsHandler();
     loadTypes();
   }, [responseUrl]);
@@ -261,9 +369,17 @@ function App() {
           </select>
           <button
             className={`${classes.searchButton} ${buttonClasses}`}
-            onClick={filterPokemon} disabled={disableFilter}
+            onClick={filterPokemon}
+            disabled={disableFilter}
           >
             Filter
+          </button>
+          <button
+            className={`${classes.searchButton} ${buttonClasses}`}
+            onClick={filterAllPokemons}
+            disabled={disableAllFilter}
+          >
+            Filter all
           </button>
         </div>
         <ul className={classes.pokedex}>
@@ -302,8 +418,43 @@ function App() {
               </li>
             );
           })}
+          {filterAll && showAllPokemons.map((el, i) => {
+            return (
+              <li
+                className={`${cardClasses} animate__animated animate__backInUp`}
+                key={i}
+              >
+                <div
+                  key={i}
+                  onClick={() => {
+                    showModal();
+                    modalIndexHandler(i);
+                  }}
+                >
+                  <img key={i} src={el.sprite} alt="" />
+                </div>
+                <p className={classes.name}>{el.name}</p>
+                <div className={classes.types}>
+                  {el.types.map((typy, j) => {
+                    return (
+                      <span
+                        className={classes.type}
+                        style={{
+                          backgroundColor: typeColors[typy.type.name],
+                          color: typeTextColors[typy.type.name],
+                        }}
+                        key={j}
+                      >
+                        {typy.type.name}
+                      </span>
+                    );
+                  })}
+                </div>
+              </li>
+            );
+          })}
         </ul>
-        {show && (
+        {show && !filterAll && (
           <Modal
             typeColor={typeColors[allData[modalIndex].types[0].type.name]}
             onClose={showModal}
@@ -346,6 +497,49 @@ function App() {
             </div>
           </Modal>
         )}
+        {show && filterAll && (
+          <Modal
+            typeColor={typeColors[showAllPokemons[modalIndex].types[0].type.name]}
+            onClose={showModal}
+          >
+            <img
+              className={classes.spriteModal}
+              src={showAllPokemons[modalIndex].sprite}
+              alt=""
+            />
+            <p className={classes.nameModal}>{showAllPokemons[modalIndex].name}</p>
+            <div className={classes.typesModal}>
+              {showAllPokemons[modalIndex].types.map((typy, j) => {
+                return (
+                  <span
+                    className={classes.typeModal}
+                    style={{
+                      backgroundColor: typeColors[typy.type.name],
+                      color: typeTextColors[typy.type.name],
+                    }}
+                    key={j}
+                  >
+                    {typy.type.name}
+                  </span>
+                );
+              })}
+            </div>
+            <p className={classes.paramsModal}>
+              <span style={{ fontWeight: "bold" }}>Height:</span>{" "}
+              {showAllPokemons[modalIndex].height}
+            </p>
+            <p className={classes.paramsModal}>
+              <span style={{ fontWeight: "bold" }}>Weight: </span>
+              {showAllPokemons[modalIndex].weight}
+            </p>
+            <div className={classes.paramsModal} style={{ fontWeight: "bold" }}>
+              Description
+            </div>
+            <div className={classes.desc}>
+              {showAllPokemons[modalIndex].description}
+            </div>
+          </Modal>
+        )}
         {isLoading && (
           <div className={classes["skDouble"]}>
             <div
@@ -356,7 +550,7 @@ function App() {
             ></div>
           </div>
         )}
-        {allData.length === 0 && !isLoading && (
+        {allData.length === 0 && showAllPokemons.length === 0 && !isLoading && (
           <p className={classes.notFound}>Pokemon not found...</p>
         )}
         <button
